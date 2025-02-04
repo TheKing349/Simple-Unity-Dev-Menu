@@ -14,6 +14,8 @@ public class DevMenu : EditorWindow
 
     private SliderInt framerateLimiterSlider;
 
+    private TextField variableWatchingVariableTextField;
+
     private int defaultTargetFramerate;
     
     private bool isLimitingFramerate;
@@ -44,7 +46,10 @@ public class DevMenu : EditorWindow
         framerateLimiterSlider.RegisterValueChangedCallback(LimitFramerateSlider);
 
         variableWatchingButton = root.Q<Button>("VariableWatchingButton");
-        variableWatchingButton.RegisterCallback<ClickEvent>(WatchVariable);
+        variableWatchingButton.RegisterCallback<ClickEvent>(WatchVariableButton);
+
+        variableWatchingVariableTextField = root.Q<TextField>("VariableWatchingVariableTextField");
+        variableWatchingVariableTextField.RegisterValueChangedCallback(WatchVariableText);
 
         #endregion
     }
@@ -52,12 +57,12 @@ public class DevMenu : EditorWindow
     #region Button Events
     private void LimitFramerateButton(ClickEvent evt)
     {
-        int targetFramerate = root.Q<SliderInt>("FramerateSlider").value;
-
         isLimitingFramerate = !isLimitingFramerate;
         framerateLimiterButton.text = isLimitingFramerate ? "Stop Limiting Framerate" : "Limit Framerate";
 
-        if (isLimitingFramerate) LimitFramerate(targetFramerate);
+        int targetFramerate = isLimitingFramerate ? framerateLimiterSlider.value : defaultTargetFramerate;
+
+        LimitFramerate(targetFramerate);
     }
 
     private void LimitFramerateSlider(ChangeEvent<int> targetFramerate)
@@ -67,13 +72,27 @@ public class DevMenu : EditorWindow
 
     private void LimitFramerate(int targetFramerate)
     {
-        Application.targetFrameRate = isLimitingFramerate ? targetFramerate : defaultTargetFramerate;
+        Application.targetFrameRate = targetFramerate;
     }
 
-    private void WatchVariable(ClickEvent evt)
+    private void WatchVariableButton(ClickEvent evt)
     {
+        string targetVariable = variableWatchingVariableTextField.value;
+        
         isWatchingVariable = !isWatchingVariable;
         variableWatchingButton.text = isWatchingVariable ? "Stop Watching" : "Watch Variable";
+        
+        WatchVariable(targetVariable);
+    }
+
+    private void WatchVariableText(ChangeEvent<string> targetVariable)
+    {
+        WatchVariable(targetVariable.newValue);
+    }
+
+    private void WatchVariable(string targetVariable)
+    {
+        Debug.Log("NOT IMPLEMENTED");
     }
     #endregion
 }
