@@ -1,12 +1,18 @@
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Reflection;
 using UnityEditor;
+using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.UIElements;
+using Object = UnityEngine.Object;
 
 public class DevMenu : EditorWindow
 {
     #region Initialization
-    [SerializeField]
-    private VisualTreeAsset visualTree;
+    
+    [SerializeField] private VisualTreeAsset visualTree;
     private VisualElement root;
 
     private Button framerateLimiterButton;
@@ -15,6 +21,10 @@ public class DevMenu : EditorWindow
     private SliderInt framerateLimiterSlider;
 
     private TextField variableWatchingVariableTextField;
+    private TextField variableWatchingValueTextField;
+
+    private ObjectField variableWatchingObjectField;
+
 
     private int defaultTargetFramerate;
     
@@ -27,6 +37,7 @@ public class DevMenu : EditorWindow
         DevMenu window = GetWindow<DevMenu>();
         window.titleContent = new GUIContent("Dev Menu");
     }
+    
     #endregion
 
     public void CreateGUI()
@@ -37,7 +48,7 @@ public class DevMenu : EditorWindow
         
         defaultTargetFramerate = Application.targetFrameRate;
 
-        #region Button Definitions
+        #region UI Definitions
         
         framerateLimiterButton = root.Q<Button>("FramerateLimiterButton");
         framerateLimiterButton.RegisterCallback<ClickEvent>(LimitFramerateButton);
@@ -51,10 +62,17 @@ public class DevMenu : EditorWindow
         variableWatchingVariableTextField = root.Q<TextField>("VariableWatchingVariableTextField");
         variableWatchingVariableTextField.RegisterValueChangedCallback(WatchVariableText);
 
+        variableWatchingValueTextField = root.Q<TextField>("VariableWatchingValueTextField");
+        
+        variableWatchingObjectField = root.Q<ObjectField>("VariableWatchingObjectField");
+        variableWatchingObjectField.RegisterValueChangedCallback(WatchVariableObjectField);
+
         #endregion
     }
 
     #region Button Events
+    
+    #region Framerate Limiter
     private void LimitFramerateButton(ClickEvent evt)
     {
         isLimitingFramerate = !isLimitingFramerate;
@@ -74,25 +92,40 @@ public class DevMenu : EditorWindow
     {
         Application.targetFrameRate = targetFramerate;
     }
+    #endregion
 
+    #region Variable Watching
     private void WatchVariableButton(ClickEvent evt)
     {
         string targetVariable = variableWatchingVariableTextField.value;
         
         isWatchingVariable = !isWatchingVariable;
         variableWatchingButton.text = isWatchingVariable ? "Stop Watching" : "Watch Variable";
+        if (!isWatchingVariable) variableWatchingValueTextField.value = "";
         
-        WatchVariable(targetVariable);
+        if (!isWatchingVariable) return;
+        
+        GameObject targetGameObject = variableWatchingObjectField.value as GameObject;
+        variableWatchingValueTextField.value = VariableWatching.Watch(targetVariable, targetGameObject);
     }
 
     private void WatchVariableText(ChangeEvent<string> targetVariable)
     {
-        WatchVariable(targetVariable.newValue);
+        if (!isWatchingVariable) return;
+        
+        GameObject targetGameObject = variableWatchingObjectField.value as GameObject;
+        variableWatchingValueTextField.value = VariableWatching.Watch(targetVariable.newValue, targetGameObject);
     }
 
-    private void WatchVariable(string targetVariable)
+    private void WatchVariableObjectField(ChangeEvent<Object> evt)
     {
-        Debug.Log("NOT IMPLEMENTED");
+        if (!isWatchingVariable) return;
+        
+        GameObject targetGameObject = evt.newValue as GameObject;
+        variableWatchingValueTextField.value = VariableWatching.Watch(variableWatchingVariableTextField.value, targetGameObject);
     }
+    
+    #endregion
+
     #endregion
 }

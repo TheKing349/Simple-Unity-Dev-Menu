@@ -6,6 +6,7 @@
             <engine:Button text="Limit Framerate" name="FramerateLimiterButton" view-data-key="FramerateLimiterButton" class="button" />
         </engine:Foldout>
         <engine:Foldout text="Variable Watching&#10;" name="VariableWatchingFoldout" view-data-key="VariableWatchingFoldout">
+            <editor:ObjectField label="Target Game Object" name="VariableWatchingObjectField" view-data-key="VariableWatchingObjectField" type="UnityEngine.GameObject, UnityEngine.CoreModule" />
             <engine:TextField label="Name of Variable" placeholder-text="myScript.varName" auto-correction="false" name="VariableWatchingVariableTextField" view-data-key="VariableWatchingVariableTextField" />
             <engine:Button text="Watch Variable" name="VariableWatchingButton" view-data-key="VariableWatchingButton" class="button" />
             <engine:TextField label="Value:" placeholder-text="values will appear here..." readonly="true" name="VariableWatchingValueTextField" view-data-key="VariableWatchingValueTextField" vertical-scroller-visibility="Auto" hide-placeholder-on-focus="false" multiline="true" />
