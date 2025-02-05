@@ -2,7 +2,6 @@ using UnityEditor;
 using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.UIElements;
-using Object = UnityEngine.Object;
 
 public class DevMenu : EditorWindow
 {
@@ -12,15 +11,12 @@ public class DevMenu : EditorWindow
     private VisualElement root;
 
     private Button framerateLimiterButton;
-    private Button variableWatchingButton;
-
     private SliderInt framerateLimiterSlider;
-
-    private TextField variableWatchingVariableTextField;
-    private TextField variableWatchingValueTextField;
-
+    
+    private Button variableWatchingButton;
+    private TextField variableTextField;
+    private TextField valueTextField;
     private ObjectField variableWatchingObjectField;
-
 
     private int defaultTargetFramerate;
     
@@ -57,10 +53,10 @@ public class DevMenu : EditorWindow
         variableWatchingButton.RegisterCallback<ClickEvent>(WatchVariableButton);
         variableWatchingButton.text = isWatchingVariable ? "Stop Watching" : "Watch Variable";
 
-        variableWatchingVariableTextField = root.Q<TextField>("VariableWatchingVariableTextField");
-        variableWatchingVariableTextField.RegisterValueChangedCallback(WatchVariableText);
+        variableTextField = root.Q<TextField>("VariableWatchingVariableTextField");
+        variableTextField.RegisterValueChangedCallback(WatchVariableText);
 
-        variableWatchingValueTextField = root.Q<TextField>("VariableWatchingValueTextField");
+        valueTextField = root.Q<TextField>("VariableWatchingValueTextField");
         
         variableWatchingObjectField = root.Q<ObjectField>("VariableWatchingObjectField");
         variableWatchingObjectField.RegisterValueChangedCallback(WatchVariableObjectField);
@@ -68,11 +64,21 @@ public class DevMenu : EditorWindow
         #endregion
     }
 
-    #region Button Events
+    private static void EnterPlaymode()
+    {
+        if (!EditorApplication.isPlaying)
+        {
+            EditorApplication.EnterPlaymode();
+        }
+    }
+    
+    #region UI Events
     
     #region Framerate Limiter
     private void LimitFramerateButton(ClickEvent evt)
     {
+        if (!isLimitingFramerate) EnterPlaymode();
+        
         isLimitingFramerate = !isLimitingFramerate;
         framerateLimiterButton.text = isLimitingFramerate ? "Stop Limiting Framerate" : "Limit Framerate";
 
@@ -86,7 +92,7 @@ public class DevMenu : EditorWindow
         if (isLimitingFramerate) LimitFramerate(targetFramerate.newValue);
     }
 
-    private void LimitFramerate(int targetFramerate)
+    private static void LimitFramerate(int targetFramerate)
     {
         Application.targetFrameRate = targetFramerate;
     }
@@ -95,32 +101,36 @@ public class DevMenu : EditorWindow
     #region Variable Watching
     private void WatchVariableButton(ClickEvent evt)
     {
-        string targetVariable = variableWatchingVariableTextField.value;
+        string targetVariable = variableTextField.value;
         
         isWatchingVariable = !isWatchingVariable;
         variableWatchingButton.text = isWatchingVariable ? "Stop Watching" : "Watch Variable";
-        if (!isWatchingVariable) variableWatchingValueTextField.value = "";
+        if (!isWatchingVariable) valueTextField.value = "";
         
-        if (!isWatchingVariable) return;
+        if (isWatchingVariable)
+        {
+            GameObject targetGameObject = variableWatchingObjectField.value as GameObject;
+            valueTextField.value = VariableWatching.Watch(targetVariable, targetGameObject);
+        }
         
-        GameObject targetGameObject = variableWatchingObjectField.value as GameObject;
-        variableWatchingValueTextField.value = VariableWatching.Watch(targetVariable, targetGameObject);
     }
 
     private void WatchVariableText(ChangeEvent<string> targetVariable)
     {
-        if (!isWatchingVariable) return;
-        
-        GameObject targetGameObject = variableWatchingObjectField.value as GameObject;
-        variableWatchingValueTextField.value = VariableWatching.Watch(targetVariable.newValue, targetGameObject);
+        if (isWatchingVariable)
+        {
+            GameObject targetGameObject = variableWatchingObjectField.value as GameObject;
+            valueTextField.value = VariableWatching.Watch(targetVariable.newValue, targetGameObject);
+        }
     }
 
     private void WatchVariableObjectField(ChangeEvent<Object> evt)
     {
-        if (!isWatchingVariable) return;
-        
-        GameObject targetGameObject = evt.newValue as GameObject;
-        variableWatchingValueTextField.value = VariableWatching.Watch(variableWatchingVariableTextField.value, targetGameObject);
+        if (isWatchingVariable)
+        {
+            GameObject targetGameObject = evt.newValue as GameObject;
+            valueTextField.value = VariableWatching.Watch(variableTextField.value, targetGameObject);
+        }
     }
     
     #endregion
