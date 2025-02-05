@@ -13,7 +13,7 @@
             </editor:ObjectField>
             <engine:TextField label="Name of Variable" placeholder-text="myScript.varName" auto-correction="false" name="VariableWatchingVariableTextField" view-data-key="VariableWatchingVariableTextField" />
             <engine:Button text="Watch Variable" name="VariableWatchingButton" view-data-key="VariableWatchingButton" class="button" />
-            <engine:TextField label="Value:" placeholder-text="values will appear here..." readonly="true" name="VariableWatchingValueTextField" view-data-key="VariableWatchingValueTextField" vertical-scroller-visibility="Auto" hide-placeholder-on-focus="false" multiline="true" />
+            <engine:TextField label="Value:" placeholder-text="values will appear here..." readonly="true" name="VariableWatchingValueTextField" view-data-key="VariableWatchingValueTextField" vertical-scroller-visibility="Auto" hide-placeholder-on-focus="false" multiline="true" style="-unity-text-align: upper-left; white-space: normal;" />
         </engine:Foldout>
     </engine:ScrollView>
 </engine:UXML>

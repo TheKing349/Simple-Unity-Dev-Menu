@@ -37,9 +37,10 @@ public class DevMenu : EditorWindow
         root = rootVisualElement;
 
         visualTree.CloneTree(root);
-        
-        defaultTargetFramerate = Application.targetFrameRate;
 
+        if (Application.targetFrameRate < 60) Application.targetFrameRate = 60;
+        defaultTargetFramerate = Application.targetFrameRate;
+        
         #region UI Definitions
         
         framerateLimiterButton = root.Q<Button>("FramerateLimiterButton");
