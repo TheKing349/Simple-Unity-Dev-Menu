@@ -1,12 +1,16 @@
 <engine:UXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:engine="UnityEngine.UIElements" xmlns:editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd" editor-extension-mode="True">
-    <Style src="project://database/Assets/Editor/DevMenu.uss?fileID=7433441132597879392&amp;guid=6ac7d23a4540656439d826997611919d&amp;type=3#DevMenu" />
+    <Style src="project://database/Assets/Editor/Menu/DevMenu.uss?fileID=7433441132597879392&amp;guid=6ac7d23a4540656439d826997611919d&amp;type=3#DevMenu" />
     <engine:ScrollView>
         <engine:Foldout text="Framerate Limiter" name="FramerateLimiterFoldout" view-data-key="FramerateLimiterFoldout" enabled="true" style="align-items: stretch; align-self: stretch;">
             <engine:SliderInt label="Target Frame Rate" value="60" high-value="165" fill="true" low-value="1" show-input-field="true" page-size="0" inverted="false" name="FramerateSlider" view-data-key="FramerateSlider" />
             <engine:Button text="Limit Framerate" name="FramerateLimiterButton" view-data-key="FramerateLimiterButton" class="button" />
         </engine:Foldout>
         <engine:Foldout text="Variable Watching&#10;" name="VariableWatchingFoldout" view-data-key="VariableWatchingFoldout">
-            <editor:ObjectField label="Target Game Object" name="VariableWatchingObjectField" view-data-key="VariableWatchingObjectField" type="UnityEngine.GameObject, UnityEngine.CoreModule" />
+            <editor:ObjectField label="Target Game Object" name="VariableWatchingObjectField" type="UnityEngine.GameObject, UnityEngine.CoreModule" data-source="project://database/Assets/Editor/Helpers/PersistentData.asset?fileID=11400000&amp;guid=8f26434636ecedd4696584197de9bb37&amp;type=2#PersistentData" allow-scene-objects="true">
+                <Bindings>
+                    <engine:DataBinding property="value" data-source-path="variableWatchingTarget" binding-mode="TwoWay" />
+                </Bindings>
+            </editor:ObjectField>
             <engine:TextField label="Name of Variable" placeholder-text="myScript.varName" auto-correction="false" name="VariableWatchingVariableTextField" view-data-key="VariableWatchingVariableTextField" />
             <engine:Button text="Watch Variable" name="VariableWatchingButton" view-data-key="VariableWatchingButton" class="button" />
             <engine:TextField label="Value:" placeholder-text="values will appear here..." readonly="true" name="VariableWatchingValueTextField" view-data-key="VariableWatchingValueTextField" vertical-scroller-visibility="Auto" hide-placeholder-on-focus="false" multiline="true" />

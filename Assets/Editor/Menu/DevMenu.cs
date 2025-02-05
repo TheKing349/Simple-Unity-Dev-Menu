@@ -1,7 +1,3 @@
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Reflection;
 using UnityEditor;
 using UnityEditor.UIElements;
 using UnityEngine;
@@ -52,12 +48,14 @@ public class DevMenu : EditorWindow
         
         framerateLimiterButton = root.Q<Button>("FramerateLimiterButton");
         framerateLimiterButton.RegisterCallback<ClickEvent>(LimitFramerateButton);
+        framerateLimiterButton.text = isLimitingFramerate ? "Stop Limiting Framerate" : "Limit Framerate";
 
         framerateLimiterSlider = root.Q<SliderInt>("FramerateSlider");
         framerateLimiterSlider.RegisterValueChangedCallback(LimitFramerateSlider);
 
         variableWatchingButton = root.Q<Button>("VariableWatchingButton");
         variableWatchingButton.RegisterCallback<ClickEvent>(WatchVariableButton);
+        variableWatchingButton.text = isWatchingVariable ? "Stop Watching" : "Watch Variable";
 
         variableWatchingVariableTextField = root.Q<TextField>("VariableWatchingVariableTextField");
         variableWatchingVariableTextField.RegisterValueChangedCallback(WatchVariableText);
