@@ -1,4 +1,3 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEditor.UIElements;
@@ -117,7 +116,7 @@ public class DevMenu : EditorWindow
         if (isWatchingVariable)
         {
             GameObject targetGameObject = variableWatchingObjectField.value as GameObject;
-            UpdateListView(VariableWatching.Watch(targetVariable, targetGameObject));
+            UpdateListView(VariableWatcher.Watch(targetVariable, targetGameObject));
         }
         
     }
@@ -127,7 +126,7 @@ public class DevMenu : EditorWindow
         if (isWatchingVariable)
         {
             GameObject targetGameObject = variableWatchingObjectField.value as GameObject;
-            UpdateListView(VariableWatching.Watch(targetVariable.newValue, targetGameObject));
+            UpdateListView(VariableWatcher.Watch(targetVariable.newValue, targetGameObject));
         }
     }
 
@@ -136,7 +135,7 @@ public class DevMenu : EditorWindow
         if (isWatchingVariable)
         {
             GameObject targetGameObject = evt.newValue as GameObject;
-            UpdateListView(VariableWatching.Watch(variableTextField.value, targetGameObject));
+            UpdateListView(VariableWatcher.Watch(variableTextField.value, targetGameObject));
         }
     }
 

@@ -1,11 +1,10 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
 using UnityEngine;
 
-public class VariableWatching : MonoBehaviour
+public class VariableWatcher : MonoBehaviour
 {
     private const int maxDepth = 5;
     
