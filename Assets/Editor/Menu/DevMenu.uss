@@ -83,3 +83,9 @@
 .unity-foldout__input {
     padding-bottom: 12px;
 }
+
+.unity-list-view__item {
+    font-size: 16px;
+    -unity-font-style: normal;
+    -unity-text-generator: standard;
+}

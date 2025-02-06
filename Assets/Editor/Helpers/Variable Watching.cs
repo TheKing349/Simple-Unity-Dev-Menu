@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using UnityEngine;
 
@@ -14,14 +15,13 @@ public class VariableWatching : MonoBehaviour
         typeof(Quaternion), typeof(Color), typeof(Rect),
         typeof(Matrix4x4), typeof(LayerMask)
     };
-
-    public static string Watch(string targetVariable, GameObject targetGameObject)
+    
+    public static List<string> Watch(string targetVariable, GameObject targetGameObject)
     {
-        if (!targetGameObject) return "No GameObject Attached";
+        if (!targetGameObject) return new List<string> { "No GameObject Attached" };
         
         object value = GetVariableValue(targetVariable, targetGameObject);
-        string formattedValue = FormatValue(value);
-        return formattedValue;
+        return FormatValue(value);
     }
 
     private static object GetVariableValue(string variableName, GameObject target)
@@ -29,103 +29,184 @@ public class VariableWatching : MonoBehaviour
         foreach (Component component in target.GetComponents<Component>())
         {
             Type type = component.GetType();
-            FieldInfo field = type.GetField(variableName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance);
-            
-            if (field != null)
+            while (type != null)
             {
-                return field.GetValue(component);
+                FieldInfo field = type.GetField(variableName, 
+                    BindingFlags.Public | 
+                    BindingFlags.NonPublic | 
+                    BindingFlags.Instance | 
+                    BindingFlags.Static);
+                
+                if (field != null)
+                {
+                    object instance = field.IsStatic ? null : component;
+                    return field.GetValue(instance);
+                }
+                type = type.BaseType;
             }
         }
-    
         return null;
     }
 
-    #region Format Values 
-    
-    private static string FormatValue(object value, int depth = 0)
+    private static List<string> FormatValue(object value, int depth = -1, string prefix = "")
     {
-        if (depth > maxDepth) return "...";
-        if (value == null) return "Variable not found";
+        List<string> lines = new();
+        
+        if (depth > maxDepth)
+        {
+            lines.Add($"{prefix}...");
+            return lines;
+        }
+
+        if (value == null)
+        {
+            lines.Add($"{prefix}<color=#6c95eb>null</color>");
+            return lines;
+        }
 
         Type type = value.GetType();
+        string color = GetColorFrom(type);
         
-        if (type.IsPrimitive || type == typeof(decimal)) return value.ToString();
-        if (type == typeof(string)) return $"\"{value}\"";
-        if (type.IsEnum) return value.ToString();
+        if (type == typeof(string))
+        {
+            lines.Add($"{prefix}<color={color}>\"{value}\"</color>");
+            return lines;
+        }
+        
+        if (type == typeof(char))
+        {
+            lines.Add($"{prefix}<color={color}>'{value}'</color>");
+            return lines;
+        }
+        
+        if (type.IsPrimitive || type.IsEnum)
+        {
+            lines.Add($"{prefix}<color={color}>{value}</color>");
+            return lines;
+        }
 
         if (UnityPrimitiveTypes.Contains(type) || type.Namespace?.StartsWith("UnityEngine") == true)
         {
-            return FormatUnityType(value, depth);
+            FormatUnityType(value, lines, depth, prefix);
+            return lines;
+        }
+
+        if (IsCollection(type))
+        {
+            FormatCollection(value as IEnumerable, lines, depth, prefix);
+            return lines;
         }
 
         if (IsDictionary(type))
         {
-            return FormatDictionary(value as IDictionary, depth + 1);
-        }
-        
-        if (IsCollection(type))
-        {
-            return FormatCollection(value as IEnumerable, depth + 1);
+            FormatDictionary(value as IDictionary, lines, depth, prefix);
+            return lines;
         }
 
-        return FormatComplexType(value, depth + 1);
+        FormatComplexType(value, lines, depth, prefix);
+        return lines;
     }
 
-    private static string FormatUnityType(object value, int depth)
+    #region Formatting Helpers
+
+    private static void FormatUnityType(object value, List<string> lines, int depth, string prefix)
     {
         Type type = value.GetType();
-        List<string> fields = new();
-
+        lines.Add($"{prefix}{type.Name}(");
+        
         foreach (FieldInfo field in type.GetFields(BindingFlags.Public | BindingFlags.Instance))
         {
-            object fieldValue = field.GetValue(value);
-            fields.Add($"{field.Name}: {FormatValue(fieldValue, depth + 1)}");
+            List<string> fieldLines = FormatValue(field.GetValue(value), depth + 1, $"{prefix}  {field.Name}: ");
+            lines.AddRange(fieldLines);
         }
-
-        return $"{type.Name}({string.Join(", ", fields)})";
+        
+        lines.Add($"{prefix})");
     }
 
-    private static string FormatComplexType(object value, int depth)
+    private static void FormatComplexType(object value, List<string> lines, int depth, string prefix)
     {
         Type type = value.GetType();
-        List<string> fields = new();
-
+        lines.Add($"{prefix}{type.Name} {{");
+        
         foreach (FieldInfo field in type.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance))
         {
-            object fieldValue = field.GetValue(value);
-            fields.Add($"{field.Name}: {FormatValue(fieldValue, depth + 1)}");
+            List<string> fieldLines = FormatValue(field.GetValue(value), depth + 1, $"{prefix}  {field.Name}: ");
+            lines.AddRange(fieldLines);
         }
-
-        return $"{type.Name} {{ {string.Join(", ", fields)} }}";
+        
+        lines.Add($"{prefix}}}");
     }
 
-    private static string FormatCollection(IEnumerable collection, int depth)
+    private static void FormatCollection(IEnumerable collection, List<string> lines, int depth, string prefix)
     {
-        List<string> elements = new();
+        Type collectionType = collection.GetType();
+        string collectionName = collectionType.Name.Trim('1').Trim('`');
+        Type[] genericArgs = collectionType.GetGenericArguments();
+
+        string collectionColor = GetColorFrom(collectionType);
+        string argColor = GetColorFrom(genericArgs[0]);
+        
+        lines.Add(
+            $"{prefix}<color={collectionColor}>{collectionName}</color>" +
+            $"<<color={argColor}>{genericArgs[0].Name}</color>> = [" );
+        
         foreach (object item in collection)
         {
-            elements.Add(FormatValue(item, depth + 1));
+            List<string> itemLines = FormatValue(item, depth, $"{prefix}");
+            lines.Add($"{prefix}    {itemLines[0]},");
         }
-        return $"[ {string.Join(", ", elements)} ]";
+        lines.Add($"{prefix}]");
     }
 
-    private static string FormatDictionary(IDictionary dictionary, int depth)
+    private static void FormatDictionary(IDictionary dictionary, List<string> lines, int depth, string prefix)
     {
-        List<string> pairs = new();
+        Type dictType = dictionary.GetType();
+        string dictName = dictType.Name.Trim('2').Trim('`');
+        Type[] genericArgs = dictType.GetGenericArguments();
+
+        string dictColor = GetColorFrom(dictType);
+        string arg1Color = GetColorFrom(genericArgs[0]);
+        string arg2Color = GetColorFrom(genericArgs[1]);
+
+        lines.Add(
+            $"{prefix}<color={dictColor}>{dictName}</color>" +
+            $"<<color={arg1Color}>{genericArgs[0].Name}</color>, " +
+            $"<color={arg2Color}>{genericArgs[1].Name}</color>> = {{" );
+        
         foreach (DictionaryEntry entry in dictionary)
         {
-            string key = FormatValue(entry.Key, depth + 1);
-            string value = FormatValue(entry.Value, depth + 1);
-            pairs.Add($"{key}: {value}");
+            List<string> keyLines = FormatValue(entry.Key, depth, $"{prefix}");
+            List<string> valueLines = FormatValue(entry.Value, depth, $"{prefix}");
+            lines.Add($"{prefix}  {{  {keyLines[0]},    {valueLines[0]}  }},");
         }
-        return $"{{ {string.Join(", ", pairs)} }}";
+        lines.Add($"{prefix}}}");
     }
-    
+
+    private static string GetColorFrom(Type type)
+    {
+        if (type == null || type == typeof(bool))
+            return "#6c95eb";
+
+        if (type == typeof(char) || type == typeof(string))
+            return "#c9a26d";
+        
+        if (type.IsClass)
+            return "#c191ff";
+
+        if (type.IsPrimitive)
+            return "#ed94c0";
+
+        if (type.IsEnum)
+            return "#eibfff";
+        
+        return "#bdbdbd";
+    }
+
     #endregion
 
     private static bool IsCollection(Type type)
     {
-        return type != typeof(string) && typeof(IEnumerable).IsAssignableFrom(type);
+        return type.IsGenericType && type.GetGenericTypeDefinition() == typeof(List<>);
     }
 
     private static bool IsDictionary(Type type)

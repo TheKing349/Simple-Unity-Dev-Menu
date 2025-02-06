@@ -1,3 +1,5 @@
+using System.Collections;
+using System.Collections.Generic;
 using UnityEditor;
 using UnityEditor.UIElements;
 using UnityEngine;
@@ -15,7 +17,7 @@ public class DevMenu : EditorWindow
     
     private Button variableWatchingButton;
     private TextField variableTextField;
-    private TextField valueTextField;
+    private ListView valueListView;
     private ObjectField variableWatchingObjectField;
 
     private int defaultTargetFramerate;
@@ -57,7 +59,8 @@ public class DevMenu : EditorWindow
         variableTextField = root.Q<TextField>("VariableWatchingVariableTextField");
         variableTextField.RegisterValueChangedCallback(WatchVariableText);
 
-        valueTextField = root.Q<TextField>("VariableWatchingValueTextField");
+        valueListView = root.Q<ListView>("VariableWatchingListView");
+        valueListView.style.height = 0;
         
         variableWatchingObjectField = root.Q<ObjectField>("VariableWatchingObjectField");
         variableWatchingObjectField.RegisterValueChangedCallback(WatchVariableObjectField);
@@ -106,12 +109,15 @@ public class DevMenu : EditorWindow
         
         isWatchingVariable = !isWatchingVariable;
         variableWatchingButton.text = isWatchingVariable ? "Stop Watching" : "Watch Variable";
-        if (!isWatchingVariable) valueTextField.value = "";
+        if (!isWatchingVariable)
+        {
+            UpdateListView(new List<string> { "" });
+        }
         
         if (isWatchingVariable)
         {
             GameObject targetGameObject = variableWatchingObjectField.value as GameObject;
-            valueTextField.value = VariableWatching.Watch(targetVariable, targetGameObject);
+            UpdateListView(VariableWatching.Watch(targetVariable, targetGameObject));
         }
         
     }
@@ -121,7 +127,7 @@ public class DevMenu : EditorWindow
         if (isWatchingVariable)
         {
             GameObject targetGameObject = variableWatchingObjectField.value as GameObject;
-            valueTextField.value = VariableWatching.Watch(targetVariable.newValue, targetGameObject);
+            UpdateListView(VariableWatching.Watch(targetVariable.newValue, targetGameObject));
         }
     }
 
@@ -130,8 +136,16 @@ public class DevMenu : EditorWindow
         if (isWatchingVariable)
         {
             GameObject targetGameObject = evt.newValue as GameObject;
-            valueTextField.value = VariableWatching.Watch(variableTextField.value, targetGameObject);
+            UpdateListView(VariableWatching.Watch(variableTextField.value, targetGameObject));
         }
+    }
+
+    private void UpdateListView(List<string> items)
+    {
+        valueListView.style.height = items.Count == 0 ? 0 : Mathf.Min(items.Count * 20, 135);
+        
+        valueListView.itemsSource = items;
+        valueListView.Rebuild();
     }
     
     #endregion
