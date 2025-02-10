@@ -59,7 +59,7 @@ public class DevMenu : EditorWindow
         variableTextField.RegisterValueChangedCallback(WatchVariableText);
 
         valueListView = root.Q<ListView>("VariableWatchingListView");
-        valueListView.style.height = 0;
+        valueListView.ClearSelection();
         
         variableWatchingObjectField = root.Q<ObjectField>("VariableWatchingObjectField");
         variableWatchingObjectField.RegisterValueChangedCallback(WatchVariableObjectField);
@@ -143,6 +143,7 @@ public class DevMenu : EditorWindow
     {
         valueListView.style.height = items.Count == 0 ? 0 : Mathf.Min(items.Count * 20, 135);
         
+        valueListView.ClearSelection();
         valueListView.itemsSource = items;
         valueListView.Rebuild();
     }

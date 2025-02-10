@@ -1,13 +1,12 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using UnityEngine;
 
 public class VariableWatcher : MonoBehaviour
 {
-    private const int maxDepth = 5;
-    
     private static readonly HashSet<Type> UnityPrimitiveTypes = new()
     {
         typeof(Vector2), typeof(Vector3), typeof(Vector4),
@@ -15,6 +14,8 @@ public class VariableWatcher : MonoBehaviour
         typeof(Matrix4x4), typeof(LayerMask)
     };
     
+    private const int maxDepth = 5;
+
     public static List<string> Watch(string targetVariable, GameObject targetGameObject)
     {
         if (!targetGameObject) return new List<string> { "No GameObject Attached" };
@@ -110,16 +111,20 @@ public class VariableWatcher : MonoBehaviour
 
     private static void FormatUnityType(object value, List<string> lines, int depth, string prefix)
     {
+        
         Type type = value.GetType();
-        lines.Add($"{prefix}{type.Name}(");
+        string typeColor = GetColorFrom(type);
+        List<string> fields = new();
         
         foreach (FieldInfo field in type.GetFields(BindingFlags.Public | BindingFlags.Instance))
         {
-            List<string> fieldLines = FormatValue(field.GetValue(value), depth + 1, $"{prefix}  {field.Name}: ");
-            lines.AddRange(fieldLines);
+            List<string> fieldLines = FormatValue(field.GetValue(value), depth);
+            
+            string fieldValue = fieldLines.Count > 0 ? fieldLines[0] : "null";
+            fields.Add(fieldValue);
         }
         
-        lines.Add($"{prefix})");
+        lines.Add($"{prefix}<color={typeColor}>{type.Name}</color>({string.Join(", ", fields)})");
     }
 
     private static void FormatComplexType(object value, List<string> lines, int depth, string prefix)
@@ -139,20 +144,26 @@ public class VariableWatcher : MonoBehaviour
     private static void FormatCollection(IEnumerable collection, List<string> lines, int depth, string prefix)
     {
         Type collectionType = collection.GetType();
-        string collectionName = collectionType.Name.Trim('1').Trim('`');
-        Type[] genericArgs = collectionType.GetGenericArguments();
-
+        string collectionName = GetFormattedTypeName(collectionType);
         string collectionColor = GetColorFrom(collectionType);
-        string argColor = GetColorFrom(genericArgs[0]);
+
+        lines.Add($"{prefix}<color={collectionColor}>{collectionName}</color> = [");
         
-        lines.Add(
-            $"{prefix}<color={collectionColor}>{collectionName}</color>" +
-            $"<<color={argColor}>{genericArgs[0].Name}</color>> = [" );
-        
-        foreach (object item in collection)
+        List<object> items = collection.Cast<object>().ToList();
+        for (int i = 0; i < items.Count; i++)
         {
-            List<string> itemLines = FormatValue(item, depth, $"{prefix}");
-            lines.Add($"{prefix}    {itemLines[0]},");
+            object item = items[i];
+            List<string> itemLines = FormatValue(item);
+            bool isLastItem = i == items.Count - 1;
+
+            for (int j = 0; j < itemLines.Count; j++)
+            {
+                string line = itemLines[j];
+                bool isLastLineOfItem = j == itemLines.Count - 1;
+
+                string suffix = isLastLineOfItem && !isLastItem ? "," : "";
+                lines.Add($"{prefix}    {line}{suffix}");
+            }
         }
         lines.Add($"{prefix}]");
     }
@@ -160,25 +171,60 @@ public class VariableWatcher : MonoBehaviour
     private static void FormatDictionary(IDictionary dictionary, List<string> lines, int depth, string prefix)
     {
         Type dictType = dictionary.GetType();
-        string dictName = dictType.Name.Trim('2').Trim('`');
-        Type[] genericArgs = dictType.GetGenericArguments();
-
+        string dictName = GetFormattedTypeName(dictType);
         string dictColor = GetColorFrom(dictType);
-        string arg1Color = GetColorFrom(genericArgs[0]);
-        string arg2Color = GetColorFrom(genericArgs[1]);
 
-        lines.Add(
-            $"{prefix}<color={dictColor}>{dictName}</color>" +
-            $"<<color={arg1Color}>{genericArgs[0].Name}</color>, " +
-            $"<color={arg2Color}>{genericArgs[1].Name}</color>> = {{" );
-        
-        foreach (DictionaryEntry entry in dictionary)
+        lines.Add($"{prefix}<color={dictColor}>{dictName}</color> = {{");
+
+        List<KeyValuePair<object, object>> entries = new();
+
+        if (dictType.IsGenericType)
         {
-            List<string> keyLines = FormatValue(entry.Key, depth, $"{prefix}");
-            List<string> valueLines = FormatValue(entry.Value, depth, $"{prefix}");
-            lines.Add($"{prefix}  {{  {keyLines[0]},    {valueLines[0]}  }},");
+            dynamic genericDict = dictionary;
+            foreach (dynamic entry in genericDict)
+            {
+                entries.Add(new KeyValuePair<object, object>(entry.Key, entry.Value));
+            }
         }
+        else
+        {
+            entries.AddRange(from DictionaryEntry entry in dictionary select new KeyValuePair<object, object>(entry.Key, entry.Value));
+        }
+
+        for (int i = 0; i < entries.Count; i++)
+        {
+            KeyValuePair<object, object> entry = entries[i];
+            List<string> keyLines = FormatValue(entry.Key, depth, prefix);
+            List<string> valueLines = FormatValue(entry.Value, depth, prefix);
+            bool isLastItem = i == entries.Count - 1;
+
+            lines.Add($"{prefix}  {{");
+            lines.AddRange(keyLines.Select(keyLine => $"{prefix}    {keyLine}"));
+            lines.AddRange(valueLines.Select(valueLine => $"{prefix}    {valueLine}"));
+            lines.Add($"{prefix}  }}" + (isLastItem ? "" : ","));
+        }
+
         lines.Add($"{prefix}}}");
+    }
+    
+    private static string GetFormattedTypeName(Type type)
+    {
+        if (!type.IsGenericType)
+            return type.Name;
+
+        string baseName = type.Name.Split('`')[0];
+        string baseColor = GetColorFrom(type);
+        
+        Type[] genericArgs = type.GetGenericArguments();
+        string[] formattedArgs = new string[genericArgs.Length];
+        for (int i = 0; i < genericArgs.Length; i++)
+        {
+            string formattedArg = GetFormattedTypeName(genericArgs[i]);
+            string formattedArgColor = GetColorFrom(genericArgs[i]);
+            
+            formattedArgs[i] = $"<color={formattedArgColor}>{formattedArg}</color>";
+        }
+        return $"<color={baseColor}>{baseName}</color>{ChangeColorOf("<")}{string.Join($"{ChangeColorOf(",")} ", formattedArgs)}{ChangeColorOf(">")}";
     }
 
     private static string GetColorFrom(Type type)
@@ -199,6 +245,11 @@ public class VariableWatcher : MonoBehaviour
             return "#eibfff";
         
         return "#bdbdbd";
+    }
+
+    private static string ChangeColorOf(string text, string color = "#bdbdbd")
+    {
+        return $"<color={color}>{text}</color>";
     }
 
     #endregion
