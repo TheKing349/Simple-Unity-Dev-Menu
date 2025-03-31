@@ -45,7 +45,7 @@ public class VariableWatcher : MonoBehaviour
                 type = type.BaseType;
             }
         }
-        return null;
+        return "No variable found";
     }
 
     private static List<string> FormatValue(object value, int depth = -1, string prefix = "")
@@ -65,11 +65,13 @@ public class VariableWatcher : MonoBehaviour
         }
 
         Type type = value.GetType();
-        string color = GetColorFrom(type);
+        string color = value.Equals("No variable found") ? "#ff0000" : GetColorFrom(type);
         
         if (type == typeof(string))
         {
-            lines.Add($"{prefix}<color={color}>\"{value}\"</color>");
+            string noVarFound = $"{prefix}<color={color}>{value}</color>";
+            string normal = $"{prefix}<color={color}>\"{value}\"</color>";
+            lines.Add(value.Equals("No variable found") ? noVarFound : normal);
             return lines;
         }
         
@@ -111,10 +113,17 @@ public class VariableWatcher : MonoBehaviour
 
     private static void FormatUnityType(object value, List<string> lines, int depth, string prefix)
     {
-        
         Type type = value.GetType();
         string typeColor = GetColorFrom(type);
         List<string> fields = new();
+        
+        string swatch = "";
+        if (type == typeof(Color))
+        {
+            Color color = (Color)value;
+            string hex = ColorUtility.ToHtmlStringRGB(color);
+            swatch = $" <color=#{hex}>■</color> ";
+        }
         
         foreach (FieldInfo field in type.GetFields(BindingFlags.Public | BindingFlags.Instance))
         {
@@ -124,12 +133,13 @@ public class VariableWatcher : MonoBehaviour
             fields.Add(fieldValue);
         }
         
-        lines.Add($"{prefix}<color={typeColor}>{type.Name}</color>({string.Join(", ", fields)})");
+        lines.Add($"{prefix}{swatch}<color={typeColor}>{type.Name}</color>({string.Join(", ", fields)})");
     }
 
     private static void FormatComplexType(object value, List<string> lines, int depth, string prefix)
     {
         Type type = value.GetType();
+        
         lines.Add($"{prefix}{type.Name} {{");
         
         foreach (FieldInfo field in type.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance))
@@ -241,7 +251,7 @@ public class VariableWatcher : MonoBehaviour
         if (type.IsPrimitive)
             return "#ed94c0";
 
-        if (type.IsEnum)
+        if (type.IsEnum || UnityPrimitiveTypes.Contains(type) || type.Namespace?.StartsWith("UnityEngine") == true)
             return "#eibfff";
         
         return "#bdbdbd";
