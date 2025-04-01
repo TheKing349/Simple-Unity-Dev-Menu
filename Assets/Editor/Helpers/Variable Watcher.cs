@@ -139,15 +139,23 @@ public class VariableWatcher : MonoBehaviour
     private static void FormatComplexType(object value, List<string> lines, int depth, string prefix)
     {
         Type type = value.GetType();
-        
+    
         lines.Add($"{prefix}{type.Name} {{");
         
         foreach (FieldInfo field in type.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance))
         {
-            List<string> fieldLines = FormatValue(field.GetValue(value), depth + 1, $"{prefix}  {field.Name}: ");
-            lines.AddRange(fieldLines);
-        }
+            object fieldValue = field.GetValue(value);
+            List<string> valueLines = FormatValue(fieldValue, depth + 1, $"{prefix}");
+            string firstLine = $"{prefix}    {field.Name}: {valueLines[0].TrimStart()}";
+            
+            lines.Add(firstLine);
         
+            for (int i = 1; i < valueLines.Count; i++)
+            {
+                lines.Add($"{prefix}    {valueLines[i]}");
+            }
+        }
+    
         lines.Add($"{prefix}}}");
     }
 
@@ -208,10 +216,32 @@ public class VariableWatcher : MonoBehaviour
             List<string> valueLines = FormatValue(entry.Value, depth, prefix);
             bool isLastItem = i == entries.Count - 1;
 
-            lines.Add($"{prefix}  {{");
-            lines.AddRange(keyLines.Select(keyLine => $"{prefix}    {keyLine}"));
-            lines.AddRange(valueLines.Select(valueLine => $"{prefix}    {valueLine}"));
-            lines.Add($"{prefix}  }}" + (isLastItem ? "" : ","));
+            List<string> entryLines = new();
+
+            for (int j = 0; j < keyLines.Count - 1; j++)
+            {
+                entryLines.Add(keyLines[j]);
+            }
+
+            //                        Length - 1
+            string lastKeyLine = keyLines[^1] + ":";
+
+            lastKeyLine += " " + valueLines[0];
+
+            for (int v = 1; v < valueLines.Count; v++)
+            {
+                entryLines.Add(valueLines[v]);
+            }
+
+            entryLines.Add(lastKeyLine);
+
+            for (int j = 0; j < entryLines.Count; j++)
+            {
+                string line = entryLines[j];
+                bool isLastLineOfEntry = j == entryLines.Count - 1;
+                string suffix = isLastLineOfEntry && !isLastItem ? "," : "";
+                lines.Add($"{prefix}    {line}{suffix}");
+            }
         }
 
         lines.Add($"{prefix}}}");
