@@ -31,6 +31,16 @@ public class DevMenu : EditorWindow
         window.titleContent = new GUIContent("Dev Menu");
     }
     
+    private void OnEnable()
+    {
+        EditorApplication.update += OnEditorUpdate;
+    }
+
+    private void OnDisable()
+    {
+        EditorApplication.update -= OnEditorUpdate;
+    }
+    
     #endregion
 
     public void CreateGUI()
@@ -72,6 +82,16 @@ public class DevMenu : EditorWindow
         if (!EditorApplication.isPlaying)
         {
             EditorApplication.EnterPlaymode();
+        }
+    }
+
+    private void OnEditorUpdate()
+    {
+        if (isWatchingVariable)
+        {
+            string targetVariable = variableTextField.value;
+            GameObject targetGameObject = variableWatchingObjectField.value as GameObject;
+            UpdateListView(VariableWatcher.Watch(targetVariable, targetGameObject));
         }
     }
     
