@@ -25,7 +25,7 @@ public class DevMenu : EditorWindow
     private bool isLimitingFramerate;
     private bool isWatchingVariable;
 
-    [MenuItem("Dev/Menu")]
+    [MenuItem("Dev/Menu #%d")]
     public static void ShowWindow()
     {
         DevMenu window = GetWindow<DevMenu>();
