@@ -79,3 +79,11 @@ crashlytics-build.properties
 /[Pp]roject[Ss]ettings/Scene*
 
 /[Aa]ssets/TEST-SCRIPTS*
+
+/[Aa]ssets/DefaultVolumeProfile.asset*
+
+/[Aa]ssets/UniversalRenderPipelineGlobalSettings.asset*
+
+/ProjectSettings*
+
+/Packages*
