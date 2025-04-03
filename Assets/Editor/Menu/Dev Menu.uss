@@ -125,3 +125,8 @@
     flex-wrap: wrap-reverse;
     flex-direction: column;
 }
+
+.unity-tab > .unity-button {
+    margin-top: 5px;
+    margin-bottom: 5px;
+}
