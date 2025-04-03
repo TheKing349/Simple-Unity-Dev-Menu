@@ -35,15 +35,10 @@ Provides essential development tools without cluttering production builds:
 - Unity 2021.3+ (UI Toolkit required)
 ## Installation
 
-### **Option 1: Package Import**
+### **Package Import**
 1. **Download** the [latest release](../../releases)
 2. **Extract** to `YourProject/Assets/Editor`
-3. **Open Menu** with `Ctrl/Cmd+Shift+D`
-
-### **Option 2: Git Submodule**
-```sh
-git submodule add https://github.com/TheKing349/Simple-Unity-Dev-Menu.git Assets/Editor/
-```
+3. **Open Menu** with `Ctrl/Cmd+Shift+D` or by going to `Dev/Menu` in the top toolbar
 
 ## Usage
 ### Framerate Control
