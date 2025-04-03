@@ -9,14 +9,15 @@ public class DevMenu : EditorWindow
     #region Initialization
     
     [SerializeField] private VisualTreeAsset visualTree;
+    
     private VisualElement root;
 
     private Button framerateLimiterButton;
     private SliderInt framerateLimiterSlider;
     
-    private Button variableWatchingButton;
-    private TextField variableTextField;
     private ListView valueListView;
+    private TextField variableTextField;
+    private Button variableWatchingButton;
     private ObjectField variableWatchingObjectField;
 
     private int defaultTargetFramerate;
@@ -87,12 +88,11 @@ public class DevMenu : EditorWindow
 
     private void OnEditorUpdate()
     {
-        if (isWatchingVariable)
-        {
-            string targetVariable = variableTextField.value;
-            GameObject targetGameObject = variableWatchingObjectField.value as GameObject;
-            UpdateListView(VariableWatcher.Watch(targetVariable, targetGameObject));
-        }
+        if (!isWatchingVariable) return;
+        
+        string targetVariable = variableTextField.value;
+        GameObject targetGameObject = variableWatchingObjectField.value as GameObject;
+        UpdateListView(VariableWatcher.Watch(targetVariable, targetGameObject));
     }
     
     #region UI Events
@@ -128,12 +128,9 @@ public class DevMenu : EditorWindow
         
         isWatchingVariable = !isWatchingVariable;
         variableWatchingButton.text = isWatchingVariable ? "Stop Watching" : "Watch Variable";
-        if (!isWatchingVariable)
-        {
-            UpdateListView(new List<string> { "" });
-        }
         
-        if (isWatchingVariable)
+        if (!isWatchingVariable) UpdateListView(new List<string> { "" });
+        else
         {
             GameObject targetGameObject = variableWatchingObjectField.value as GameObject;
             UpdateListView(VariableWatcher.Watch(targetVariable, targetGameObject));
@@ -143,20 +140,18 @@ public class DevMenu : EditorWindow
 
     private void WatchVariableText(ChangeEvent<string> targetVariable)
     {
-        if (isWatchingVariable)
-        {
-            GameObject targetGameObject = variableWatchingObjectField.value as GameObject;
-            UpdateListView(VariableWatcher.Watch(targetVariable.newValue, targetGameObject));
-        }
+        if (!isWatchingVariable) return;
+        
+        GameObject targetGameObject = variableWatchingObjectField.value as GameObject;
+        UpdateListView(VariableWatcher.Watch(targetVariable.newValue, targetGameObject));
     }
 
     private void WatchVariableObjectField(ChangeEvent<Object> evt)
     {
-        if (isWatchingVariable)
-        {
-            GameObject targetGameObject = evt.newValue as GameObject;
-            UpdateListView(VariableWatcher.Watch(variableTextField.value, targetGameObject));
-        }
+        if (!isWatchingVariable) return;
+        
+        GameObject targetGameObject = evt.newValue as GameObject;
+        UpdateListView(VariableWatcher.Watch(variableTextField.value, targetGameObject));
     }
 
     private void UpdateListView(List<string> items)
