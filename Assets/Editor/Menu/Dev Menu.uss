@@ -109,7 +109,7 @@
     -unity-background-image-tint-color: rgb(0, 0, 0);
     -unity-font-style: italic;
     -unity-text-align: middle-left;
-    text-overflow: clip;
+    text-overflow: ellipsis;
     white-space: pre;
     flex-shrink: 0;
     overflow: hidden;
