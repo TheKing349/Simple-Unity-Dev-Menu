@@ -17,8 +17,8 @@ public class DevMenu : EditorWindow
     
     private ListView valueListView;
     private TextField variableTextField;
-    private Button variableWatchingButton;
-    private ObjectField variableWatchingObjectField;
+    private Button variableWatcherButton;
+    private ObjectField variableWatcherObjectField;
 
     private int defaultTargetFramerate;
     
@@ -62,18 +62,18 @@ public class DevMenu : EditorWindow
         framerateLimiterSlider = root.Q<SliderInt>("FramerateSlider");
         framerateLimiterSlider.RegisterValueChangedCallback(LimitFramerateSlider);
 
-        variableWatchingButton = root.Q<Button>("VariableWatchingButton");
-        variableWatchingButton.RegisterCallback<ClickEvent>(WatchVariableButton);
-        variableWatchingButton.text = isWatchingVariable ? "Stop Watching" : "Watch Variable";
+        variableWatcherButton = root.Q<Button>("VariableWatcherButton");
+        variableWatcherButton.RegisterCallback<ClickEvent>(WatchVariableButton);
+        variableWatcherButton.text = isWatchingVariable ? "Stop Watching" : "Watch Variable";
 
-        variableTextField = root.Q<TextField>("VariableWatchingVariableTextField");
+        variableTextField = root.Q<TextField>("VariableWatcherVariableTextField");
         variableTextField.RegisterValueChangedCallback(WatchVariableText);
 
-        valueListView = root.Q<ListView>("VariableWatchingListView");
+        valueListView = root.Q<ListView>("VariableWatcherListView");
         valueListView.ClearSelection();
         
-        variableWatchingObjectField = root.Q<ObjectField>("VariableWatchingObjectField");
-        variableWatchingObjectField.RegisterValueChangedCallback(WatchVariableObjectField);
+        variableWatcherObjectField = root.Q<ObjectField>("VariableWatcherObjectField");
+        variableWatcherObjectField.RegisterValueChangedCallback(WatchVariableObjectField);
 
         #endregion
     }
@@ -91,7 +91,7 @@ public class DevMenu : EditorWindow
         if (!isWatchingVariable) return;
         
         string targetVariable = variableTextField.value;
-        GameObject targetGameObject = variableWatchingObjectField.value as GameObject;
+        GameObject targetGameObject = variableWatcherObjectField.value as GameObject;
         UpdateListView(VariableWatcher.Watch(targetVariable, targetGameObject));
     }
     
@@ -127,12 +127,12 @@ public class DevMenu : EditorWindow
         string targetVariable = variableTextField.value;
         
         isWatchingVariable = !isWatchingVariable;
-        variableWatchingButton.text = isWatchingVariable ? "Stop Watching" : "Watch Variable";
+        variableWatcherButton.text = isWatchingVariable ? "Stop Watching" : "Watch Variable";
         
         if (!isWatchingVariable) UpdateListView(new List<string> { "" });
         else
         {
-            GameObject targetGameObject = variableWatchingObjectField.value as GameObject;
+            GameObject targetGameObject = variableWatcherObjectField.value as GameObject;
             UpdateListView(VariableWatcher.Watch(targetVariable, targetGameObject));
         }
         
@@ -142,7 +142,7 @@ public class DevMenu : EditorWindow
     {
         if (!isWatchingVariable) return;
         
-        GameObject targetGameObject = variableWatchingObjectField.value as GameObject;
+        GameObject targetGameObject = variableWatcherObjectField.value as GameObject;
         UpdateListView(VariableWatcher.Watch(targetVariable.newValue, targetGameObject));
     }
 
