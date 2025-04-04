@@ -47,7 +47,7 @@ Provides essential development tools without cluttering production builds:
 2. Drag slider to desired FPS
 3. Toggle **Limit Framerate**
 
-### Variable Watching
+### Variable Watcher
 1. Attach a GameObject to the **Target Game Object** field
 2. Type exact variable name
 3. Click **Watch Variable** to start monitoring
@@ -59,8 +59,17 @@ Provides essential development tools without cluttering production builds:
 ScrollView
 ├─ [Foldout] Framerate Limiter
 │  └─ Slider + Toggle
-├─ [Foldout] Variable Watching
-│  └─ ObjectField + TextField + Watch Button + Value
+├─ [Foldout] Variable Watcher
+│  ├─ ObjectField
+│  ├─ TextField 
+│  ├─ Watch Button
+│  └─ Value
+├─ [Foldout] Example Tab Buttons
+│  ├─ [Tab]
+│  ├─ ├─ Button 1
+│  ├─ ├─ Button 2
+│  ├─ ├─ Button 3
+│  └─ └─ Button 4
 ```
 
 ## Contributing
