@@ -12,12 +12,12 @@ public class DevMenu : EditorWindow
     
     private VisualElement root;
 
-    private Button framerateLimiterButton;
+    private UnityEngine.UIElements.Button framerateLimiterButton;
     private SliderInt framerateLimiterSlider;
     
     private ListView valueListView;
     private TextField variableTextField;
-    private Button variableWatcherButton;
+    private UnityEngine.UIElements.Button variableWatcherButton;
     private ObjectField variableWatcherObjectField;
 
     private int defaultTargetFramerate;
@@ -55,14 +55,14 @@ public class DevMenu : EditorWindow
         
         #region UI Definitions
         
-        framerateLimiterButton = root.Q<Button>("FramerateLimiterButton");
+        framerateLimiterButton = root.Q<UnityEngine.UIElements.Button>("FramerateLimiterButton");
         framerateLimiterButton.RegisterCallback<ClickEvent>(LimitFramerateButton);
         framerateLimiterButton.text = isLimitingFramerate ? "Stop Limiting Framerate" : "Limit Framerate";
 
         framerateLimiterSlider = root.Q<SliderInt>("FramerateSlider");
         framerateLimiterSlider.RegisterValueChangedCallback(LimitFramerateSlider);
 
-        variableWatcherButton = root.Q<Button>("VariableWatcherButton");
+        variableWatcherButton = root.Q<UnityEngine.UIElements.Button>("VariableWatcherButton");
         variableWatcherButton.RegisterCallback<ClickEvent>(WatchVariableButton);
         variableWatcherButton.text = isWatchingVariable ? "Stop Watching" : "Watch Variable";
 
